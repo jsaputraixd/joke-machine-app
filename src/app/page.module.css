@@ -212,21 +212,3 @@
   color: #b3b1a6;
   text-align: center;
 }
-
-.credit {
-  pointer-events: auto;
-  font-family: var(--font-body);
-  font-size: 10px;
-  color: #9a9890;
-  text-align: center;
-}
-
-.credit a {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.credit a:hover {
-  color: #5c5a54;
-}

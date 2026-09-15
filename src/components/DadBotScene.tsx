@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Suspense,
   useEffect,
   useMemo,
   useRef,
@@ -9,10 +8,9 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { Canvas, extend, useFrame, useThree } from "@react-three/fiber";
-import { Html, OrbitControls, useGLTF } from "@react-three/drei";
+import { Canvas, extend, useFrame } from "@react-three/fiber";
+import { Html, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
-import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 
 extend({ RoundedBoxGeometry });
@@ -143,167 +141,11 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-// How far you can zoom out: front-on, rotated to the side, and swung all the
-// way around to view from behind. The room is a different distance away in
-// each of those directions, so a ceiling that's safe dead-ahead clips
-// straight through a wall once you've orbited past it — this shrinks (or
-// widens) the ceiling to match as you turn. BACK is a starting guess — Dad-Bot
-// stands close to the back wall, so it's deliberately the tightest of the
-// three; tune it directly.
-const FRONT_MAX_DISTANCE = 16;
-const SIDE_MAX_DISTANCE = 9;
-const BACK_MAX_DISTANCE = 3;
-
-/**
- * Pulls the camera's zoom-out ceiling in as you orbit toward the side walls.
- *
- * `maxDistance` alone is a one-way ceiling — it stops the camera clipping
- * through a wall, but doesn't push it back out again once you rotate back
- * to centre. So on top of that ceiling, this also actively re-pins the
- * camera to the (now larger) ceiling on the way back — but only while it's
- * resting AT the ceiling; a distance the user reached by scrolling in
- * manually is left alone rather than being dragged back out on them.
- */
-function CameraDistanceLimiter({
-  controlsRef,
-}: {
-  controlsRef: RefObject<OrbitControlsImpl | null>;
-}) {
-  const prevMaxRef = useRef(FRONT_MAX_DISTANCE);
-  const dirRef = useRef(new THREE.Vector3());
-
-  useFrame(() => {
-    const controls = controlsRef.current;
-    if (!controls) return;
-
-    // getAzimuthalAngle() is 0 dead-ahead, ±π/2 side-on, ±π looking from
-    // directly behind. Two cosine segments — front→side, then side→back —
-    // stitched together at π/2: each one barely tightens near its own anchor
-    // and narrows fastest mid-segment, rather than a linear (and therefore
-    // abrupt-feeling) falloff.
-    const angle = Math.abs(controls.getAzimuthalAngle());
-    const newMax =
-      angle <= Math.PI / 2
-        ? lerp(SIDE_MAX_DISTANCE, FRONT_MAX_DISTANCE, Math.cos(angle))
-        : lerp(BACK_MAX_DISTANCE, SIDE_MAX_DISTANCE, Math.cos(angle - Math.PI / 2));
-
-    const camera = controls.object;
-    const dir = dirRef.current.subVectors(camera.position, controls.target);
-    const currentDistance = dir.length();
-    const wasPinnedToCeiling = currentDistance >= prevMaxRef.current - 0.05;
-
-    controls.maxDistance = newMax;
-
-    if (wasPinnedToCeiling) {
-      dir.normalize();
-      camera.position.copy(controls.target).addScaledVector(dir, newMax);
-    }
-
-    controls.update();
-    prevMaxRef.current = newMax;
-  });
-  return null;
-}
-
-// "Cartoon Office" by scrawach (Sketchfab, Standard License).
-const OFFICE_URL = "/models/cartoon-office/scene.gltf";
-
-// 1.3875 increased by 50%.
-const ROBOT_SCALE = 2.08125;
-
-// Where Dad-Bot stands, in paces out from the room's centre. "Left" and
-// "back" are from the viewer's default vantage point. One pace ~0.8 units,
-// roughly a human stride at this scale. The base offsets put him in the open
-// aisle; the paces move him from there.
-const STEP = 0.8;
-const PACES_LEFT = 1;
-// Split the difference between the original 4.5 and 11.5.
-const PACES_BACK = 4.5;
-const STAND_X = -1.02 + PACES_LEFT * STEP;
-// Negative: the camera sits at +Z looking toward -Z, so "back" (further
-// into the room, away from the viewer) is the negative direction.
-const STAND_Z = -0.38 - PACES_BACK * STEP;
-
-/**
- * Office set. Auto-fitted rather than hand-placed: the model is scaled so the
- * room stands at a believable height next to Dad-Bot, dropped so its floor
- * lands on y=0, and centred on him.
- */
-function Office({ onFloorY }: { onFloorY: (y: number) => void }) {
-  const { scene } = useGLTF(OFFICE_URL);
-
-  const floorY = useMemo(() => {
-    // Must happen before ANY measurement of this scene. A freshly-loaded
-    // GLTF has never been through a render pass, so its matrixWorld state
-    // is undefined until this runs — Box3.setFromObject silently uses
-    // whatever's there rather than computing it. That's exactly what was
-    // producing a wrong (and inconsistent dev-vs-production) size/scale for
-    // the whole room: this call used to happen only later, for the floor
-    // raycast, after the box below had already been computed on stale data.
-    scene.updateMatrixWorld(true);
-
-    const box = new THREE.Box3().setFromObject(scene);
-    const size = box.getSize(new THREE.Vector3());
-    const center = box.getCenter(new THREE.Vector3());
-    // Dad-Bot is ~1.9 units tall, so a ~3.8 unit room reads as a real ceiling.
-    const scale = 3.8 / size.y;
-
-    // TEMP DIAGNOSTIC — remove once the prod-only shrink/float bug is found.
-    console.log("[office-debug] box", {
-      size: [size.x, size.y, size.z],
-      center: [center.x, center.y, center.z],
-      min: [box.min.x, box.min.y, box.min.z],
-      max: [box.max.x, box.max.y, box.max.z],
-      scale,
-      childCount: scene.children.length,
-      meshCount: (() => {
-        let n = 0;
-        scene.traverse((o) => {
-          if ((o as THREE.Mesh).isMesh) n++;
-        });
-        return n;
-      })(),
-    });
-
-    // The office stays fixed and centred — Dad-Bot is what moves through it.
-    scene.scale.setScalar(scale);
-    scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
-
-    scene.traverse((o) => {
-      const mesh = o as THREE.Mesh;
-      if (mesh.isMesh) {
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-      }
-    });
-
-    // The model's lowest point is the underside of the floor slab, not its
-    // walking surface — standing on y=0 buries his feet. Raycast straight down
-    // at Dad-Bot's actual spot to find the floor height there. The scale/
-    // position just changed above, so matrices need refreshing again.
-    scene.updateMatrixWorld(true);
-    const floorRay = new THREE.Raycaster(
-      new THREE.Vector3(STAND_X, 20, STAND_Z),
-      new THREE.Vector3(0, -1, 0),
-    );
-    const floorHits = floorRay.intersectObject(scene, true);
-    // The lowest hit point directly below the stand spot — not "the last
-    // element", which only equals that if intersectObject's ordering is
-    // exactly what's expected. This was floating Dad-Bot above the floor
-    // in production while looking correct in dev.
-    return floorHits.length > 0
-      ? Math.min(...floorHits.map((h) => h.point.y))
-      : 0;
-  }, [scene]);
-
-  useEffect(() => {
-    onFloorY(floorY);
-  }, [floorY, onFloorY]);
-
-  return <primitive object={scene} />;
-}
-
-useGLTF.preload(OFFICE_URL);
+// Back to the plain white-void scene — the office (Sketchfab "Cartoon
+// Office" by scrawach) is removed. Its auto-fit scale calculation had a real
+// bug (a useMemo mutating a cached GLTF scene, which rendered correctly in
+// dev only by accident — see git history on this file if reviving it), and
+// after burning a lot of time chasing it, simpler is better here.
 
 function Robot({
   state,
@@ -962,22 +804,6 @@ function Robot({
   );
 }
 
-// TEMP DIAGNOSTIC — remove once the prod-only shrink/float bug is found.
-function DebugCanvasInfo() {
-  const { size, camera, gl } = useThree();
-  useEffect(() => {
-    console.log("[office-debug] canvas", {
-      cssSize: [size.width, size.height],
-      drawingBufferSize: [gl.domElement.width, gl.domElement.height],
-      devicePixelRatio: typeof window !== "undefined" ? window.devicePixelRatio : null,
-      cameraAspect: (camera as THREE.PerspectiveCamera).aspect,
-      cameraFov: (camera as THREE.PerspectiveCamera).fov,
-      cameraPosition: camera.position.toArray(),
-    });
-  }, [size, camera, gl]);
-  return null;
-}
-
 function SceneContent({
   state,
   mouthLevelRef,
@@ -991,52 +817,31 @@ function SceneContent({
   onTellJoke: () => void;
   bubble?: ReactNode;
 }) {
-  const [floorY, setFloorY] = useState(0);
-  const controlsRef = useRef<OrbitControlsImpl | null>(null);
-
   return (
     <>
-      <DebugCanvasInfo />
-      <color attach="background" args={["#eceef2"]} />
+      <color attach="background" args={["#ffffff"]} />
+      <fog attach="fog" args={["#ffffff", 6, 16]} />
 
-      {/* Interior lighting: flatter and more ambient than the white-void rig,
-          since the room supplies its own walls and bounce. */}
-      <hemisphereLight args={[0xffffff, 0xb8bcc6, 1.05]} />
+      <hemisphereLight args={[0xffffff, 0xe4e4e4, 0.9]} />
       <directionalLight
         position={[3, 5, 4]}
-        intensity={0.7}
+        intensity={0.8}
         castShadow
         shadow-mapSize={[1024, 1024]}
-        shadow-camera-left={-4}
-        shadow-camera-right={4}
-        shadow-camera-top={4}
-        shadow-camera-bottom={-4}
+        shadow-camera-left={-3}
+        shadow-camera-right={3}
+        shadow-camera-top={3}
+        shadow-camera-bottom={-3}
       />
-      <directionalLight position={[-4, 2, -2]} intensity={0.3} />
-      <directionalLight
-        position={[0, 2.2, -4]}
-        intensity={0.45}
-        color={0xdfeaff}
-      />
+      <directionalLight position={[-4, 2, -2]} intensity={0.35} />
+      <directionalLight position={[0, 2.2, -4]} intensity={0.5} color={0xdfeaff} />
 
-      {/* Overhead fill, positioned above wherever Dad-Bot actually stands
-          (STAND_X/STAND_Z) — a point light so it pools over him instead of
-          flatly lighting the whole room like another directional would. */}
-      <pointLight
-        position={[STAND_X, 6, STAND_Z]}
-        intensity={10}
-        distance={14}
-        decay={2}
-        color={0xfff2df}
-      />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[60, 60]} />
+        <meshStandardMaterial color={0xffffff} roughness={0.95} metalness={0} />
+      </mesh>
 
-      <Suspense fallback={null}>
-        <Office onFloorY={setFloorY} />
-      </Suspense>
-
-      {/* Dad-Bot sits on the measured floor, scaled down to office-human size.
-          The bubble lives inside this group so it tracks his actual head. */}
-      <group position={[STAND_X, floorY, STAND_Z]} scale={ROBOT_SCALE}>
+      <group>
         <Robot
           state={state}
           mouthLevelRef={mouthLevelRef}
@@ -1055,21 +860,14 @@ function SceneContent({
         ) : null}
       </group>
 
-      <CameraDistanceLimiter controlsRef={controlsRef} />
-
       <OrbitControls
-        ref={controlsRef}
-        target={[STAND_X, floorY + 1.35 * ROBOT_SCALE, STAND_Z]}
+        target={[0, 1.2, 0]}
         enableDamping
         dampingFactor={0.08}
         minDistance={3}
-        // Static ceiling for the very first frame, before the limiter above
-        // has run once — it takes over every frame after that.
-        maxDistance={FRONT_MAX_DISTANCE}
-        maxPolarAngle={Math.PI * 0.54}
-        // Held lower than the white-void version so you can't rise up and
-        // look over the office walls.
-        minPolarAngle={Math.PI * 0.3}
+        maxDistance={9}
+        maxPolarAngle={Math.PI * 0.52}
+        minPolarAngle={Math.PI * 0.15}
         enablePan={false}
       />
     </>
@@ -1092,7 +890,7 @@ export default function DadBotScene({
   return (
     <Canvas
       shadows={{ type: THREE.PCFShadowMap }}
-      camera={{ position: [STAND_X, 1.7, STAND_Z + FRONT_MAX_DISTANCE], fov: 38 }}
+      camera={{ position: [0, 1.5, 5.6], fov: 38 }}
     >
       <SceneContent
         state={state}

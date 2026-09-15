@@ -305,18 +305,6 @@ export default function Home() {
           <div className={styles.hint}>
             press the button on his chest · drag to look around · scroll to zoom
           </div>
-
-          <div className={styles.credit}>
-            Office model{" "}
-            <a
-              href="https://sketchfab.com/3d-models/cartoon-office-7d7a64a1749c44deb8be233eb131b47e"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              &ldquo;Cartoon Office&rdquo;
-            </a>{" "}
-            by scrawach
-          </div>
         </div>
       </div>
     </main>

@@ -34,15 +34,3 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## Third-party assets
-
-- **"Cartoon Office"** by [scrawach](https://sketchfab.com/scrawach) —
-  [model page](https://sketchfab.com/3d-models/cartoon-office-7d7a64a1749c44deb8be233eb131b47e),
-  Sketchfab Standard License. Used as the 3D environment
-  (`public/models/cartoon-office/`).
-
-  Note: the Sketchfab Standard License prohibits making the licensed material
-  available as a stand-alone file. Serving the `.glb`/`.gltf` from `public/`
-  means it is fetchable at a predictable URL, which is a known grey area for
-  any web3D deployment — worth reviewing before this ships publicly.
