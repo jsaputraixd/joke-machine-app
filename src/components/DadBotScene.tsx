@@ -260,7 +260,13 @@ function Office({ onFloorY }: { onFloorY: (y: number) => void }) {
       new THREE.Vector3(0, -1, 0),
     );
     const floorHits = floorRay.intersectObject(scene, true);
-    return floorHits.length > 0 ? floorHits[floorHits.length - 1].point.y : 0;
+    // The lowest hit point directly below the stand spot — not "the last
+    // element", which only equals that if intersectObject's ordering is
+    // exactly what's expected. This was floating Dad-Bot above the floor
+    // in production while looking correct in dev.
+    return floorHits.length > 0
+      ? Math.min(...floorHits.map((h) => h.point.y))
+      : 0;
   }, [scene]);
 
   useEffect(() => {
