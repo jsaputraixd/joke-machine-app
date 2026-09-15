@@ -233,6 +233,15 @@ function Office({ onFloorY }: { onFloorY: (y: number) => void }) {
   const { scene } = useGLTF(OFFICE_URL);
 
   const floorY = useMemo(() => {
+    // Must happen before ANY measurement of this scene. A freshly-loaded
+    // GLTF has never been through a render pass, so its matrixWorld state
+    // is undefined until this runs — Box3.setFromObject silently uses
+    // whatever's there rather than computing it. That's exactly what was
+    // producing a wrong (and inconsistent dev-vs-production) size/scale for
+    // the whole room: this call used to happen only later, for the floor
+    // raycast, after the box below had already been computed on stale data.
+    scene.updateMatrixWorld(true);
+
     const box = new THREE.Box3().setFromObject(scene);
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
@@ -253,7 +262,8 @@ function Office({ onFloorY }: { onFloorY: (y: number) => void }) {
 
     // The model's lowest point is the underside of the floor slab, not its
     // walking surface — standing on y=0 buries his feet. Raycast straight down
-    // at Dad-Bot's actual spot to find the floor height there.
+    // at Dad-Bot's actual spot to find the floor height there. The scale/
+    // position just changed above, so matrices need refreshing again.
     scene.updateMatrixWorld(true);
     const floorRay = new THREE.Raycaster(
       new THREE.Vector3(STAND_X, 20, STAND_Z),
