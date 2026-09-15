@@ -143,12 +143,16 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-// How far you can zoom out, front-on vs. rotated to the side. The room is
-// much narrower side-to-side than it is deep, so a distance that's safely
-// inside the back wall when facing forward clips straight through a side
-// wall once you've orbited toward it — this shrinks the ceiling as you turn.
-const FRONT_MAX_DISTANCE = 12;
-const SIDE_MAX_DISTANCE = 5.5;
+// How far you can zoom out: front-on, rotated to the side, and swung all the
+// way around to view from behind. The room is a different distance away in
+// each of those directions, so a ceiling that's safe dead-ahead clips
+// straight through a wall once you've orbited past it — this shrinks (or
+// widens) the ceiling to match as you turn. BACK is a starting guess — Dad-Bot
+// stands close to the back wall, so it's deliberately the tightest of the
+// three; tune it directly.
+const FRONT_MAX_DISTANCE = 16;
+const SIDE_MAX_DISTANCE = 9;
+const BACK_MAX_DISTANCE = 3;
 
 /**
  * Pulls the camera's zoom-out ceiling in as you orbit toward the side walls.
@@ -172,13 +176,16 @@ function CameraDistanceLimiter({
     const controls = controlsRef.current;
     if (!controls) return;
 
-    // getAzimuthalAngle() is 0 dead-ahead and ±π/2 looking from the side;
-    // cosine gives a curve that barely tightens near the front and narrows
-    // fastest as you approach a straight-on side view, rather than a linear
-    // (and therefore abrupt-feeling) falloff.
-    const angle = Math.min(Math.abs(controls.getAzimuthalAngle()), Math.PI / 2);
-    const factor = Math.cos(angle);
-    const newMax = lerp(SIDE_MAX_DISTANCE, FRONT_MAX_DISTANCE, factor);
+    // getAzimuthalAngle() is 0 dead-ahead, ±π/2 side-on, ±π looking from
+    // directly behind. Two cosine segments — front→side, then side→back —
+    // stitched together at π/2: each one barely tightens near its own anchor
+    // and narrows fastest mid-segment, rather than a linear (and therefore
+    // abrupt-feeling) falloff.
+    const angle = Math.abs(controls.getAzimuthalAngle());
+    const newMax =
+      angle <= Math.PI / 2
+        ? lerp(SIDE_MAX_DISTANCE, FRONT_MAX_DISTANCE, Math.cos(angle))
+        : lerp(BACK_MAX_DISTANCE, SIDE_MAX_DISTANCE, Math.cos(angle - Math.PI / 2));
 
     const camera = controls.object;
     const dir = dirRef.current.subVectors(camera.position, controls.target);

@@ -120,7 +120,13 @@
 /* Speech bubble — anchored in 3D beside Dad-Bot's head, so it sits off the body
    instead of covering it. Grows up-and-right from its anchor point. */
 .bubbleWrap {
-  transform: translateY(-100%);
+  /* --bubble-shift-x/-y are set from JS each frame to keep the bubble
+     on-screen regardless of where its 3D anchor point currently projects to,
+     or how tall a long joke has made it. */
+  transform: translate(
+    var(--bubble-shift-x, 0px),
+    calc(-100% + var(--bubble-shift-y, 0px))
+  );
   pointer-events: none;
 }
 
@@ -128,6 +134,11 @@
   position: relative;
   width: max-content;
   max-width: min(280px, 60vw);
+  /* Belt-and-suspenders alongside the JS vertical clamp: a joke long enough
+     to exceed most of the viewport height scrolls internally instead of
+     ever being able to push both its top and bottom off-screen at once. */
+  max-height: min(480px, 70vh);
+  overflow-y: auto;
   border: 1px solid #d8d6cf;
   background: rgba(255, 255, 255, 0.96);
   border-radius: 16px;

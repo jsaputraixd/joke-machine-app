@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import styles from "./page.module.css";
 import type { RobotState } from "@/components/DadBotScene";
@@ -17,6 +17,9 @@ export default function Home() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [robotState, setRobotState] = useState<RobotState>("idle");
+
+  const bubbleWrapRef = useRef<HTMLDivElement>(null);
+  const bubbleInnerRef = useRef<HTMLDivElement>(null);
 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const mouthLevelRef = useRef(0);
@@ -179,9 +182,60 @@ export default function Home() {
     }
   }
 
+  // The bubble is anchored at a 3D point beside Dad-Bot's head and only grows
+  // rightward/upward from there (see .bubbleWrap). A short joke rarely gets
+  // big enough to notice; a long one wraps to several lines — tall enough to
+  // push its top edge above the viewport — and can also run past the right
+  // edge, especially with him rotated toward the left. This measures the
+  // bubble every frame and nudges it back on-screen via CSS vars, rather than
+  // trying to guess a safe anchor offset up front — the anchor's actual
+  // screen position moves continuously as the camera orbits, so a one-time
+  // layout check wouldn't stay correct.
+  useEffect(() => {
+    let rafId: number;
+    const EDGE_MARGIN = 16;
+
+    const clamp = () => {
+      const wrap = bubbleWrapRef.current;
+      const inner = bubbleInnerRef.current;
+      if (wrap && inner) {
+        // Reset first so the measurement reflects the anchor position, not
+        // last frame's correction — otherwise small errors compound.
+        wrap.style.setProperty("--bubble-shift-x", "0px");
+        wrap.style.setProperty("--bubble-shift-y", "0px");
+        const rect = inner.getBoundingClientRect();
+
+        let shiftX = 0;
+        if (rect.right > window.innerWidth - EDGE_MARGIN) {
+          shiftX = window.innerWidth - EDGE_MARGIN - rect.right;
+        } else if (rect.left < EDGE_MARGIN) {
+          shiftX = EDGE_MARGIN - rect.left;
+        }
+
+        // Grows upward, so the failure mode is the top running off-screen —
+        // push it down. (A bottom check is included too, in case the anchor
+        // itself is ever moved low enough for that to matter.)
+        let shiftY = 0;
+        if (rect.top < EDGE_MARGIN) {
+          shiftY = EDGE_MARGIN - rect.top;
+        } else if (rect.bottom > window.innerHeight - EDGE_MARGIN) {
+          shiftY = window.innerHeight - EDGE_MARGIN - rect.bottom;
+        }
+
+        wrap.style.setProperty("--bubble-shift-x", `${shiftX}px`);
+        wrap.style.setProperty("--bubble-shift-y", `${shiftY}px`);
+      }
+      rafId = requestAnimationFrame(clamp);
+    };
+
+    rafId = requestAnimationFrame(clamp);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
   const bubble = (
-    <div className={styles.bubbleWrap}>
+    <div ref={bubbleWrapRef} className={styles.bubbleWrap}>
       <div
+        ref={bubbleInnerRef}
         className={`${styles.bubble} ${status === "error" ? styles.bubbleError : ""}`}
         aria-live="polite"
       >
