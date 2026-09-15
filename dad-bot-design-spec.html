@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dad-Bot — Visual &amp; Character Design Spec</title>
+<style>
+  :root {
+    --bg: #0b0d0a;
+    --bg-panel: #14170f;
+    --frame: #ffb020;
+    --frame-dim: #7a5a1e;
+    --phosphor: #7dffa3;
+    --cream: #f4e9d8;
+    --pop: #ff3ea5;
+    --grid-line: #2a2d22;
+    --text-dim: #9a9a8e;
+    --font-hud: 'Space Mono', 'IBM Plex Mono', ui-monospace, monospace;
+    --font-body: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color: var(--cream);
+    font-family: var(--font-body);
+    padding: 48px 24px 96px;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  header { margin-bottom: 56px; }
+  .kicker {
+    font-family: var(--font-hud);
+    color: var(--frame);
+    letter-spacing: 0.15em;
+    font-size: 12px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-family: var(--font-hud);
+    font-size: clamp(28px, 5vw, 42px);
+    margin: 0 0 12px;
+    color: var(--cream);
+    letter-spacing: -0.01em;
+  }
+  .sub { color: var(--text-dim); font-size: 16px; max-width: 640px; line-height: 1.6; }
+  h2 {
+    font-family: var(--font-hud);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--frame);
+    border-bottom: 1px solid var(--frame-dim);
+    padding-bottom: 10px;
+    margin: 0 0 24px;
+  }
+  section { margin-bottom: 64px; }
+  p { line-height: 1.7; color: var(--cream); font-size: 15px; }
+  .dim { color: var(--text-dim); }
+
+  /* Palette */
+  .palette { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+  .swatch {
+    border: 1px solid var(--grid-line);
+    background: var(--bg-panel);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .swatch-color { height: 70px; }
+  .swatch-label { padding: 10px 12px; font-family: var(--font-hud); font-size: 11px; }
+  .swatch-name { color: var(--cream); display: block; margin-bottom: 2px; }
+  .swatch-hex { color: var(--text-dim); }
+
+  /* Type */
+  .type-sample { background: var(--bg-panel); border: 1px solid var(--grid-line); border-radius: 6px; padding: 24px; margin-bottom: 14px; }
+  .type-sample .label { font-family: var(--font-hud); font-size: 11px; color: var(--frame); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .type-hud { font-family: var(--font-hud); font-size: 22px; color: var(--phosphor); }
+  .type-body { font-family: var(--font-body); font-size: 20px; color: var(--cream); }
+
+  /* Face states grid */
+  .states {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+  }
+  .state-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--grid-line);
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .state-card svg { width: 100%; height: auto; display: block; margin-bottom: 12px; }
+  .state-name { font-family: var(--font-hud); font-size: 12px; color: var(--frame); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .state-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+
+  .note-box {
+    border-left: 3px solid var(--pop);
+    background: var(--bg-panel);
+    padding: 16px 20px;
+    border-radius: 0 6px 6px 0;
+  }
+  footer { color: var(--text-dim); font-family: var(--font-hud); font-size: 11px; text-align: center; margin-top: 40px; letter-spacing: 0.08em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">Joke Machine — Design Spec v0.1</div>
+    <h1>Dad-Bot</h1>
+    <p class="sub">Visual and character design language for the joke machine's face. Companion document to the PRD — covers mood, palette, type, and the face state sheet used to build the animated character.</p>
+  </header>
+
+  <section>
+    <h2>01 — Character Overview</h2>
+    <p>Genuinely, earnestly convinced every joke is a banger. Delivers punchlines with theatrical pride, waits a beat too long for a reaction, and wins either way — groan or laugh. Dad mannerisms translated into robot behavior: finger-guns, a self-satisfied nod, an occasional "...get it?" on the worst ones.</p>
+  </section>
+
+  <section>
+    <h2>02 — Mood &amp; Aesthetic Direction</h2>
+    <p>Two references collide on purpose: <strong style="color:var(--phosphor)">retro CRT / phosphor-terminal HUD</strong> (amber glow, scanline texture, monospace readouts — the "old tech" half of dad energy) crossed with <strong style="color:var(--pop)">Y2K grunge streetwear</strong> accents (a single hot-pink sticker-style pop, distressed edges, not polished or corporate). The face itself stays geometric and minimal — the personality comes from timing and micro-expression, not surface decoration.</p>
+    <p class="dim">Guardrail: one grunge/Y2K accent color max, used sparingly (sticker/glitch moments only) so the HUD language stays legible and doesn't turn into a costume.</p>
+  </section>
+
+  <section>
+    <h2>03 — Color Palette</h2>
+    <div class="palette">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#0b0d0a"></div>
+        <div class="swatch-label"><span class="swatch-name">Void / BG</span><span class="swatch-hex">#0B0D0A</span></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#ffb020"></div>
+        <div class="swatch-label"><span class="swatch-name">Frame Amber</span><span class="swatch-hex">#FFB020</span></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#7dffa3"></div>
+        <div class="swatch-label"><span class="swatch-name">Phosphor Green</span><span class="swatch-hex">#7DFFA3</span></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#f4e9d8"></div>
+        <div class="swatch-label"><span class="swatch-name">Cream</span><span class="swatch-hex">#F4E9D8</span></div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#ff3ea5"></div>
+        <div class="swatch-label"><span class="swatch-name">Pop Accent</span><span class="swatch-hex">#FF3EA5</span></div>
+      </div>
+    </div>
+    <p class="dim" style="margin-top:14px;">Amber = the face's idle glow and frame. Phosphor green = active/talking state. Cream = body text and UI. Pop pink = punchline-only flourish (finger-guns glyph, "get it?" callout) — never used at rest.</p>
+  </section>
+
+  <section>
+    <h2>04 — Typography</h2>
+    <div class="type-sample">
+      <div class="label">HUD / Display — Space Mono or IBM Plex Mono</div>
+      <div class="type-hud">TELL ME A JOKE_</div>
+    </div>
+    <div class="type-sample">
+      <div class="label">Body — system sans / Inter</div>
+      <div class="type-body">Why don't scientists trust atoms? Because they make up everything.</div>
+    </div>
+    <p class="dim">Monospace carries all HUD labels, buttons, and status text (reinforces the terminal identity). Body/joke text renders in a clean sans for readability — the joke itself should never fight the chrome around it.</p>
+  </section>
+
+  <section>
+    <h2>05 — Face State Sheet</h2>
+    <p class="dim" style="margin-bottom:20px;">Construction: rounded-square HUD frame, two square "cube" eyes (nod to Animated-Robot-Face / Emo-style bots), a single pill-shaped mouth that changes height/width per state. Mustache glyph sits between eyes and mouth as the one dad signifier — present in every state, most exaggerated at the punchline.</p>
+    <div class="states">
+
+      <div class="state-card">
+        <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="10" width="160" height="130" rx="18" fill="none" stroke="var(--frame)" stroke-width="3"/>
+          <rect x="55" y="55" width="20" height="20" rx="4" fill="var(--phosphor)"/>
+          <rect x="125" y="55" width="20" height="20" rx="4" fill="var(--phosphor)"/>
+          <path d="M75 95 q25 10 50 0" stroke="var(--cream)" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <rect x="82" y="98" width="36" height="6" rx="3" fill="var(--cream)" opacity="0.5"/>
+          <rect x="60" y="115" width="4" height="4" fill="var(--frame)" opacity="0.6"/>
+        </svg>
+        <div class="state-name">01 · Idle</div>
+        <div class="state-desc">Slow blink loop, subtle "breathing" scale pulse on the frame glow. Signals presence without demanding attention between jokes.</div>
+      </div>
+
+      <div class="state-card">
+        <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="10" width="160" height="130" rx="18" fill="none" stroke="var(--frame)" stroke-width="3"/>
+          <rect x="55" y="60" width="20" height="10" rx="3" fill="var(--phosphor)"/>
+          <rect x="125" y="60" width="20" height="10" rx="3" fill="var(--phosphor)"/>
+          <line x1="70" y1="95" x2="130" y2="95" stroke="var(--cream)" stroke-width="4" stroke-linecap="round"/>
+          <rect x="82" y="98" width="36" height="6" rx="3" fill="var(--cream)" opacity="0.5"/>
+          <circle cx="150" cy="30" r="4" fill="var(--frame)"><animate attributeName="opacity" values="0.2;1;0.2" dur="1s" repeatCount="indefinite"/></circle>
+          <circle cx="162" cy="30" r="4" fill="var(--frame)" opacity="0.5"/>
+          <circle cx="174" cy="30" r="4" fill="var(--frame)" opacity="0.3"/>
+        </svg>
+        <div class="state-name">02 · Thinking</div>
+        <div class="state-desc">Eyes narrow to half-height, three-dot loading glyph in the corner. Holds while the LLM/TTS call is in flight.</div>
+      </div>
+
+      <div class="state-card">
+        <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="10" width="160" height="130" rx="18" fill="none" stroke="var(--phosphor)" stroke-width="3"/>
+          <rect x="55" y="55" width="20" height="20" rx="4" fill="var(--phosphor)"/>
+          <rect x="125" y="55" width="20" height="20" rx="4" fill="var(--phosphor)"/>
+          <ellipse cx="100" cy="100" rx="22" ry="14" fill="var(--cream)"/>
+          <rect x="82" y="98" width="36" height="6" rx="3" fill="var(--bg-panel)" opacity="0.7"/>
+        </svg>
+        <div class="state-name">03 · Talking (open)</div>
+        <div class="state-desc">Wide mouth-open frame, driven by ElevenLabs vowel-timing data. Frame outline switches to phosphor green while audio is playing.</div>
+      </div>
+
+      <div class="state-card">
+        <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="10" width="160" height="130" rx="18" fill="none" stroke="var(--phosphor)" stroke-width="3"/>
+          <rect x="55" y="55" width="20" height="20" rx="4" fill="var(--phosphor)"/>
+          <rect x="125" y="55" width="20" height="20" rx="4" fill="var(--phosphor)"/>
+          <ellipse cx="100" cy="98" rx="18" ry="5" fill="var(--cream)"/>
+          <rect x="82" y="97" width="36" height="4" rx="2" fill="var(--bg-panel)" opacity="0.7"/>
+        </svg>
+        <div class="state-name">04 · Talking (closed)</div>
+        <div class="state-desc">Consonant/small-mouth frame — alternates with 03 during speech per character timing to produce the "talking" impression.</div>
+      </div>
+
+      <div class="state-card">
+        <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(6,4)">
+            <rect x="20" y="10" width="160" height="130" rx="18" fill="none" stroke="var(--frame)" stroke-width="3"/>
+            <rect x="53" y="58" width="20" height="14" rx="4" fill="var(--phosphor)"/>
+            <rect x="123" y="58" width="20" height="14" rx="4" fill="var(--phosphor)"/>
+            <line x1="72" y1="98" x2="128" y2="94" stroke="var(--cream)" stroke-width="4" stroke-linecap="round"/>
+            <rect x="82" y="98" width="36" height="6" rx="3" fill="var(--cream)" opacity="0.5"/>
+          </g>
+        </svg>
+        <div class="state-name">05 · Lean-in</div>
+        <div class="state-desc">Whole frame shifts forward/scales up ~4%, slight tilt, eyes narrow — the "wait for it" beat right before the punchline.</div>
+      </div>
+
+      <div class="state-card">
+        <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="10" width="160" height="130" rx="18" fill="none" stroke="var(--pop)" stroke-width="3"/>
+          <rect x="55" y="52" width="20" height="6" rx="3" fill="var(--phosphor)"/>
+          <rect x="125" y="50" width="22" height="22" rx="4" fill="var(--phosphor)"/>
+          <path d="M72 92 q28 22 56 0" stroke="var(--cream)" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <rect x="80" y="98" width="40" height="6" rx="3" fill="var(--cream)" opacity="0.6"/>
+          <g stroke="var(--pop)" stroke-width="4" stroke-linecap="round">
+            <line x1="25" y1="120" x2="10" y2="128"/>
+            <line x1="25" y1="120" x2="10" y2="112"/>
+            <line x1="175" y1="120" x2="190" y2="128"/>
+            <line x1="175" y1="120" x2="190" y2="112"/>
+          </g>
+        </svg>
+        <div class="state-name">06 · Punchline reaction</div>
+        <div class="state-desc">Big grin, one-eye wink, finger-guns glyph flanking the frame, frame outline flashes pop pink. The payoff beat — worth the most animation polish.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>06 — Dad Signifier</h2>
+    <p>Single signifier chosen: a small pixel-mustache glyph, centered between the eyes and mouth. Present at low opacity in every state so the character reads as "dad" even at rest, and pulses to full opacity on the punchline-reaction beat. Deliberately not a full costume (no hat, no shirt pattern) — keeps the HUD-minimal language intact.</p>
+  </section>
+
+  <section>
+    <h2>07 — Motion Notes</h2>
+    <div class="note-box">
+      <p style="margin:0 0 10px;"><strong>Idle:</strong> blink every 3–5s (randomized, not metronomic), frame glow pulses subtly — "alive," not static.</p>
+      <p style="margin:0 0 10px;"><strong>Talking:</strong> mouth state driven directly by ElevenLabs character-timing data (see PRD §5) — no separate animation timeline to hand-author.</p>
+      <p style="margin:0;"><strong>Punchline:</strong> the single moment allowed to break the otherwise-restrained HUD language — this is where color, motion, and the mustache flourish all peak together. Everywhere else, restraint.</p>
+    </div>
+  </section>
+
+  <footer>DAD-BOT DESIGN SPEC · v0.1 · COMPANION TO JOKE MACHINE PRD</footer>
+
+</div>
+</body>
+</html>

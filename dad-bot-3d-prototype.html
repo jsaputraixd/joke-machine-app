@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dad-Bot — 3D Concept (Rough Pass)</title>
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; background: #ffffff; height: 100%; }
+  #canvas-holder { position: fixed; inset: 0; }
+  canvas { display: block; }
+  .ui {
+    position: fixed;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    color: #222;
+    z-index: 10;
+  }
+  .ui-top {
+    top: 20px; left: 20px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #888;
+  }
+  .ui-controls {
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  button {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid #ddd;
+    background: #111;
+    color: #fff;
+    cursor: pointer;
+  }
+  button:hover { background: #333; }
+  button:active { transform: scale(0.97); }
+  .hint {
+    bottom: 24px; right: 20px;
+    font-size: 12px;
+    color: #999;
+  }
+  .note {
+    top: 20px; right: 20px;
+    font-size: 11px;
+    color: #aaa;
+    max-width: 220px;
+    text-align: right;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div id="canvas-holder"></div>
+<div class="ui ui-top">DAD-BOT — 3D concept, rough pass</div>
+<div class="ui note">Proportions, suit color, and screen bezel are all easy to change — this is a starting point to react to, not a locked design.</div>
+<div class="ui ui-controls">
+  <button id="talkBtn">▶ Play talk demo</button>
+</div>
+<div class="ui hint">Drag to look around · scroll to zoom</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  const holder = document.getElementById('canvas-holder');
+
+  // ---------- Scene / renderer ----------
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
+  scene.fog = new THREE.Fog(0xffffff, 6, 16);
+
+  const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 1.5, 4.2);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  holder.appendChild(renderer.domElement);
+
+  // ---------- Controls ----------
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 1.1, 0);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 2.2;
+  controls.maxDistance = 7;
+  controls.maxPolarAngle = Math.PI * 0.52;
+  controls.minPolarAngle = Math.PI * 0.15;
+  controls.enablePan = false;
+  controls.update();
+
+  // ---------- Lighting (soft studio setup) ----------
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xe4e4e4, 0.9));
+
+  const key = new THREE.DirectionalLight(0xffffff, 0.8);
+  key.position.set(3, 5, 4);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.camera.left = -3;
+  key.shadow.camera.right = 3;
+  key.shadow.camera.top = 3;
+  key.shadow.camera.bottom = -3;
+  key.shadow.radius = 6;
+  scene.add(key);
+
+  const fill = new THREE.DirectionalLight(0xffffff, 0.35);
+  fill.position.set(-4, 2, -2);
+  scene.add(fill);
+
+  // ---------- Infinite white floor ----------
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(60, 60),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, metalness: 0 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // ---------- Materials ----------
+  const suitMat = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.55, metalness: 0.1 });
+  const shirtMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.7 });
+  const tieMat = new THREE.MeshStandardMaterial({ color: 0x6b1420, roughness: 0.5 });
+  const gloveMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f0, roughness: 0.6 });
+  const bezelMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.3, metalness: 0.2 });
+
+  // ---------- Robot group ----------
+  const robot = new THREE.Group();
+  scene.add(robot);
+
+  // Legs
+  function makeLeg(x) {
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.5, 16), suitMat);
+    leg.position.set(x, 0.25, 0);
+    leg.castShadow = true;
+    robot.add(leg);
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.19, 16, 16), suitMat);
+    foot.scale.set(1.15, 0.55, 1.3);
+    foot.position.set(x, 0.06, 0.05);
+    foot.castShadow = true;
+    robot.add(foot);
+  }
+  makeLeg(-0.22);
+  makeLeg(0.22);
+
+  // Torso (rounded, mascot-ish ellipsoid)
+  const torso = new THREE.Mesh(new THREE.SphereGeometry(0.6, 32, 32), suitMat);
+  torso.scale.set(0.72, 0.8, 0.52);
+  torso.position.set(0, 1.12, 0);
+  torso.castShadow = true;
+  robot.add(torso);
+
+  // Shirt/collar wedge
+  const shirt = new THREE.Mesh(new THREE.ConeGeometry(0.17, 0.26, 3), shirtMat);
+  shirt.rotation.x = Math.PI;
+  shirt.rotation.z = Math.PI;
+  shirt.position.set(0, 1.42, 0.36);
+  shirt.scale.set(1, 1, 0.4);
+  robot.add(shirt);
+
+  // Tie
+  const tie = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.42, 0.03), tieMat);
+  tie.position.set(0, 1.18, 0.4);
+  robot.add(tie);
+
+  // Arms
+  function makeArm(x, sign) {
+    const arm = new THREE.Group();
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.1, 0.5, 14), suitMat);
+    upper.position.set(x, 1.18, 0);
+    upper.rotation.z = sign * 0.35;
+    upper.castShadow = true;
+    arm.add(upper);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 16), gloveMat);
+    hand.position.set(x + sign * 0.22, 0.82, 0);
+    hand.castShadow = true;
+    arm.add(hand);
+    robot.add(arm);
+    return arm;
+  }
+  const armL = makeArm(-0.56, -1);
+  const armR = makeArm(0.56, 1);
+
+  // Neck
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.12, 14), suitMat);
+  neck.position.set(0, 1.62, 0);
+  robot.add(neck);
+
+  // Head (TV housing) — group so we can nod it independently
+  const head = new THREE.Group();
+  head.position.set(0, 1.92, 0);
+  robot.add(head);
+
+  const housing = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.68, 0.42), bezelMat);
+  housing.castShadow = true;
+  head.add(housing);
+
+  // rounded "feet"/antenna details for personality
+  const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.18, 8), suitMat);
+  antenna.position.set(0, 0.42, 0);
+  head.add(antenna);
+  const antennaTip = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 12), tieMat);
+  antennaTip.position.set(0, 0.51, 0);
+  head.add(antennaTip);
+
+  // ---------- Screen (canvas texture face) ----------
+  const canvas = document.createElement('canvas');
+  canvas.width = 256; canvas.height = 220;
+  const ctx = canvas.getContext('2d');
+  const screenTexture = new THREE.CanvasTexture(canvas);
+
+  const screenMat = new THREE.MeshBasicMaterial({ map: screenTexture });
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.53), screenMat);
+  screen.position.set(0, 0, 0.215);
+  head.add(screen);
+
+  // ---------- Face drawing ----------
+  const face = {
+    blink: 0,          // 0 = open, 1 = closed
+    mouthOpen: 0,       // 0..1
+    grin: 0,            // 0..1 punchline grin amount
+    bg: '#0a0a0a'
+  };
+
+  function drawFace() {
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = face.bg;
+    ctx.fillRect(0, 0, w, h);
+
+    const eyeY = h * 0.42;
+    const eyeSpacing = w * 0.24;
+    const eyeW = w * 0.15;
+    const eyeH = (1 - face.blink) * h * 0.16 + 4;
+
+    ctx.fillStyle = '#7dffb0';
+    [-1, 1].forEach((s) => {
+      const ex = w / 2 + s * eyeSpacing;
+      ctx.beginPath();
+      const r = Math.min(eyeW, eyeH) * 0.3;
+      roundRect(ctx, ex - eyeW / 2, eyeY - eyeH / 2, eyeW, eyeH, r);
+      ctx.fill();
+    });
+
+    // Mouth
+    const mouthY = h * 0.72;
+    ctx.strokeStyle = '#f4e9d8';
+    ctx.fillStyle = '#f4e9d8';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+
+    if (face.grin > 0.05) {
+      // punchline grin
+      const grinW = w * (0.32 + 0.1 * face.grin);
+      ctx.beginPath();
+      ctx.moveTo(w / 2 - grinW / 2, mouthY - 6);
+      ctx.quadraticCurveTo(w / 2, mouthY + 18 * face.grin, w / 2 + grinW / 2, mouthY - 6);
+      ctx.stroke();
+    } else {
+      const mw = w * 0.22;
+      const mh = 6 + face.mouthOpen * 40;
+      ctx.beginPath();
+      roundRect(ctx, w / 2 - mw / 2, mouthY - mh / 2, mw, mh, mh * 0.4);
+      ctx.fill();
+    }
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  drawFace();
+
+  // ---------- Idle blink ----------
+  let nextBlinkAt = performance.now() + 2000 + Math.random() * 2000;
+  let blinking = false;
+  let blinkStart = 0;
+
+  function updateBlink(now) {
+    if (talking) return; // don't fight the talk demo
+    if (!blinking && now > nextBlinkAt) {
+      blinking = true;
+      blinkStart = now;
+    }
+    if (blinking) {
+      const t = (now - blinkStart) / 160; // full blink duration
+      face.blink = t < 0.5 ? t * 2 : (1 - t) * 2;
+      if (t >= 1) {
+        face.blink = 0;
+        blinking = false;
+        nextBlinkAt = now + 2500 + Math.random() * 3000;
+      }
+    }
+  }
+
+  // ---------- Talk demo sequence ----------
+  let talking = false;
+  const talkBtn = document.getElementById('talkBtn');
+
+  function playTalkDemo() {
+    if (talking) return;
+    talking = true;
+    talkBtn.disabled = true;
+    talkBtn.textContent = '● Talking…';
+
+    const start = performance.now();
+    const talkDuration = 1800;   // mouth flapping
+    const grinDuration = 1000;   // punchline hold
+
+    function talkStep(now) {
+      const elapsed = now - start;
+      if (elapsed < talkDuration) {
+        face.mouthOpen = 0.3 + 0.7 * Math.abs(Math.sin(elapsed / 90));
+        face.grin = 0;
+        requestAnimationFrame(talkStep);
+      } else if (elapsed < talkDuration + 250) {
+        // brief lean-in pause
+        face.mouthOpen = 0;
+        head.rotation.x = -0.06;
+        requestAnimationFrame(talkStep);
+      } else if (elapsed < talkDuration + 250 + grinDuration) {
+        const gt = (elapsed - talkDuration - 250) / 150;
+        face.grin = Math.min(1, gt);
+        head.rotation.x = -0.06 + Math.min(1, gt) * 0.14;
+        requestAnimationFrame(talkStep);
+      } else {
+        face.grin = 0;
+        face.mouthOpen = 0;
+        head.rotation.x = 0;
+        talking = false;
+        talkBtn.disabled = false;
+        talkBtn.textContent = '▶ Play talk demo';
+      }
+    }
+    requestAnimationFrame(talkStep);
+  }
+
+  talkBtn.addEventListener('click', playTalkDemo);
+
+  // ---------- Animate ----------
+  const clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    const now = performance.now();
+
+    updateBlink(now);
+    drawFace();
+    screenTexture.needsUpdate = true;
+
+    // idle bob + arm sway
+    robot.position.y = Math.sin(t * 1.1) * 0.015;
+    armL.rotation.z = Math.sin(t * 0.8) * 0.03;
+    armR.rotation.z = -Math.sin(t * 0.8) * 0.03;
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // ---------- Resize ----------
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+</script>
+</body>
+</html>

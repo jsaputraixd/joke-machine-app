@@ -1,0 +1,8 @@
+Model Information:
+* title:	Cartoon Office
+* source:	https://sketchfab.com/3d-models/cartoon-office-7d7a64a1749c44deb8be233eb131b47e
+* author:	scrawach (https://sketchfab.com/scrawach)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works

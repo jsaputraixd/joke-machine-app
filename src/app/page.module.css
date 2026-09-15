@@ -1,0 +1,221 @@
+.page {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.sceneLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 24px;
+  pointer-events: none;
+}
+
+.header {
+  text-align: center;
+}
+
+.kicker {
+  font-family: var(--font-hud);
+  color: var(--frame);
+  letter-spacing: 0.15em;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.title {
+  font-family: var(--font-hud);
+  font-size: clamp(24px, 5vw, 34px);
+  color: #171717;
+  letter-spacing: -0.01em;
+  margin-top: 6px;
+}
+
+.bottomBar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+
+/* Keyboard/screen-reader route to the joke — the chest button is a 3D mesh
+   and can't take focus. Hidden until focused, then shown as a normal button. */
+.srButton {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--font-hud);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  padding: 14px 30px;
+  border-radius: 999px;
+  border: 1px solid var(--frame);
+  background: var(--frame);
+  color: #14170f;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.srButton:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  outline: 2px solid #171717;
+  outline-offset: 3px;
+}
+
+.lengthToggle {
+  pointer-events: auto;
+  display: inline-flex;
+  border: 1px solid #d8d6cf;
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+}
+
+.toggleOption {
+  font-family: var(--font-hud);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #8a887e;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.toggleOption:hover {
+  color: #171717;
+}
+
+.toggleActive {
+  background: var(--frame);
+  color: #14170f;
+}
+
+.toggleOption:focus-visible {
+  outline: 2px solid #171717;
+  outline-offset: 2px;
+}
+
+/* Speech bubble — anchored in 3D beside Dad-Bot's head, so it sits off the body
+   instead of covering it. Grows up-and-right from its anchor point. */
+.bubbleWrap {
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+.bubble {
+  position: relative;
+  width: max-content;
+  max-width: min(280px, 60vw);
+  border: 1px solid #d8d6cf;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 16px;
+  padding: 14px 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.2s ease;
+}
+
+.bubble::after {
+  content: "";
+  position: absolute;
+  left: 20px;
+  bottom: -8px;
+  width: 15px;
+  height: 15px;
+  background: inherit;
+  border-right: 1px solid #d8d6cf;
+  border-bottom: 1px solid #d8d6cf;
+  border-bottom-right-radius: 3px;
+  transform: rotate(45deg);
+}
+
+.bubbleError,
+.bubbleError::after {
+  border-color: var(--pop);
+}
+
+.jokeText {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  color: #171717;
+  white-space: pre-wrap;
+}
+
+.placeholder {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #8a887e;
+  font-style: italic;
+}
+
+.thinking {
+  font-family: var(--font-hud);
+  font-size: 13px;
+  color: #14170f;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dots {
+  display: inline-block;
+  animation: blink 1.2s steps(1) infinite;
+}
+
+@keyframes blink {
+  0%, 20% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.errorText {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--pop);
+}
+
+.hint {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #b3b1a6;
+  text-align: center;
+}
+
+.credit {
+  pointer-events: auto;
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: #9a9890;
+  text-align: center;
+}
+
+.credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.credit a:hover {
+  color: #5c5a54;
+}

@@ -1,0 +1,48 @@
+:root {
+  --bg: #0b0d0a;
+  --bg-panel: #14170f;
+  --frame: #ffb020;
+  --frame-dim: #7a5a1e;
+  --phosphor: #7dffa3;
+  --cream: #f4e9d8;
+  --pop: #ff3ea5;
+  --grid-line: #2a2d22;
+  --text-dim: #9a9a8e;
+}
+
+html {
+  height: 100%;
+  color-scheme: light;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  color: #171717;
+  background: #ffffff;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
