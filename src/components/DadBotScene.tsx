@@ -9,7 +9,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { Canvas, extend, useFrame } from "@react-three/fiber";
+import { Canvas, extend, useFrame, useThree } from "@react-three/fiber";
 import { Html, OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
@@ -247,6 +247,23 @@ function Office({ onFloorY }: { onFloorY: (y: number) => void }) {
     const center = box.getCenter(new THREE.Vector3());
     // Dad-Bot is ~1.9 units tall, so a ~3.8 unit room reads as a real ceiling.
     const scale = 3.8 / size.y;
+
+    // TEMP DIAGNOSTIC — remove once the prod-only shrink/float bug is found.
+    console.log("[office-debug] box", {
+      size: [size.x, size.y, size.z],
+      center: [center.x, center.y, center.z],
+      min: [box.min.x, box.min.y, box.min.z],
+      max: [box.max.x, box.max.y, box.max.z],
+      scale,
+      childCount: scene.children.length,
+      meshCount: (() => {
+        let n = 0;
+        scene.traverse((o) => {
+          if ((o as THREE.Mesh).isMesh) n++;
+        });
+        return n;
+      })(),
+    });
 
     // The office stays fixed and centred — Dad-Bot is what moves through it.
     scene.scale.setScalar(scale);
@@ -945,6 +962,22 @@ function Robot({
   );
 }
 
+// TEMP DIAGNOSTIC — remove once the prod-only shrink/float bug is found.
+function DebugCanvasInfo() {
+  const { size, camera, gl } = useThree();
+  useEffect(() => {
+    console.log("[office-debug] canvas", {
+      cssSize: [size.width, size.height],
+      drawingBufferSize: [gl.domElement.width, gl.domElement.height],
+      devicePixelRatio: typeof window !== "undefined" ? window.devicePixelRatio : null,
+      cameraAspect: (camera as THREE.PerspectiveCamera).aspect,
+      cameraFov: (camera as THREE.PerspectiveCamera).fov,
+      cameraPosition: camera.position.toArray(),
+    });
+  }, [size, camera, gl]);
+  return null;
+}
+
 function SceneContent({
   state,
   mouthLevelRef,
@@ -963,6 +996,7 @@ function SceneContent({
 
   return (
     <>
+      <DebugCanvasInfo />
       <color attach="background" args={["#eceef2"]} />
 
       {/* Interior lighting: flatter and more ambient than the white-void rig,
